@@ -1,4 +1,5 @@
 import type { WebSearchProvider, WebSearchResponse } from "../types";
+import { WebSearchRequestError, extractDomain } from "../types";
 
 const API_URL = "https://google.serper.dev/search";
 
@@ -26,7 +27,10 @@ export class SerperSearchProvider implements WebSearchProvider {
 
     if (!response.ok) {
       const body = await response.text().catch(() => "");
-      throw new Error(`Serper API error ${response.status}: ${body.slice(0, 500)}`);
+      const message = `Serper API error ${response.status}: ${body.slice(0, 500)}`;
+      if (response.status === 401 || response.status === 403) throw new WebSearchRequestError("invalid_key", message);
+      if (response.status === 429) throw new WebSearchRequestError("rate_limited", message);
+      throw new WebSearchRequestError("provider_error", message);
     }
 
     const data = (await response.json()) as { organic?: SerperOrganicResult[] };
@@ -34,6 +38,7 @@ export class SerperSearchProvider implements WebSearchProvider {
       title: r.title,
       url: r.link,
       snippet: r.snippet ?? "",
+      domain: extractDomain(r.link),
     }));
 
     return { provider: this.id, results };

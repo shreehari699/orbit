@@ -1,4 +1,5 @@
 import type { WebSearchProvider, WebSearchResponse } from "../types";
+import { WebSearchRequestError, extractDomain } from "../types";
 
 const API_URL = "https://api.search.brave.com/res/v1/web/search";
 
@@ -28,7 +29,10 @@ export class BraveSearchProvider implements WebSearchProvider {
 
     if (!response.ok) {
       const body = await response.text().catch(() => "");
-      throw new Error(`Brave Search API error ${response.status}: ${body.slice(0, 500)}`);
+      const message = `Brave Search API error ${response.status}: ${body.slice(0, 500)}`;
+      if (response.status === 401 || response.status === 403) throw new WebSearchRequestError("invalid_key", message);
+      if (response.status === 429) throw new WebSearchRequestError("rate_limited", message);
+      throw new WebSearchRequestError("provider_error", message);
     }
 
     const data = (await response.json()) as { web?: { results?: BraveWebResult[] } };
@@ -36,6 +40,7 @@ export class BraveSearchProvider implements WebSearchProvider {
       title: r.title,
       url: r.url,
       snippet: r.description ?? "",
+      domain: extractDomain(r.url),
     }));
 
     return { provider: this.id, results };

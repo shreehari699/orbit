@@ -4,7 +4,7 @@ import { useState } from "react";
 import * as Icons from "lucide-react";
 
 import { requestWebSearch } from "@/lib/websearch/client";
-import type { WebSearchResult } from "@/lib/websearch/types";
+import type { WebSearchResult, WebSearchErrorKind } from "@/lib/websearch/types";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
@@ -13,9 +13,13 @@ type Status = "idle" | "loading" | "done" | "not-configured" | "error";
 export function WebResults({ query }: { query: string }) {
   const [status, setStatus] = useState<Status>("idle");
   const [results, setResults] = useState<WebSearchResult[]>([]);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [errorKind, setErrorKind] = useState<WebSearchErrorKind | null>(null);
 
   async function handleSearch() {
     setStatus("loading");
+    setErrorMessage("");
+    setErrorKind(null);
     try {
       const response = await requestWebSearch(query);
       if (!response.configured) {
@@ -24,14 +28,19 @@ export function WebResults({ query }: { query: string }) {
       }
       if (response.error) {
         setStatus("error");
+        setErrorMessage(response.error);
+        setErrorKind(response.errorKind ?? null);
         return;
       }
       setResults(response.results ?? []);
       setStatus("done");
     } catch {
       setStatus("error");
+      setErrorMessage("The web search request failed. Try again in a moment.");
     }
   }
+
+  const isRateLimited = errorKind === "rate_limited";
 
   return (
     <section className="flex flex-col gap-3">
@@ -48,15 +57,25 @@ export function WebResults({ query }: { query: string }) {
       {status === "not-configured" && (
         <Card className="p-4 text-sm text-muted">
           No web search provider is configured. Set{" "}
-          <code className="rounded bg-black/[0.05] px-1 dark:bg-white/[0.08]">BRAVE_SEARCH_API_KEY</code> or{" "}
+          <code className="rounded bg-black/[0.05] px-1 dark:bg-white/[0.08]">TAVILY_API_KEY</code>,{" "}
+          <code className="rounded bg-black/[0.05] px-1 dark:bg-white/[0.08]">BRAVE_SEARCH_API_KEY</code>, or{" "}
           <code className="rounded bg-black/[0.05] px-1 dark:bg-white/[0.08]">SERPER_API_KEY</code> to enable
-          live web results — ORBIT&apos;s own tool search above still works either way.
+          live web results — ORBIT&apos;s own tool search above always works regardless.
         </Card>
       )}
 
       {status === "error" && (
-        <Card className="border-danger/30 bg-danger/5 p-4 text-sm text-danger">
-          The web search request failed. Try again in a moment.
+        <Card
+          className={`flex items-start gap-2 p-4 text-sm ${
+            isRateLimited ? "border-accent/30 bg-accent/5 text-foreground" : "border-danger/30 bg-danger/5 text-danger"
+          }`}
+        >
+          {isRateLimited ? (
+            <Icons.Clock className="h-4 w-4 shrink-0 translate-y-0.5" strokeWidth={1.75} />
+          ) : (
+            <Icons.AlertTriangle className="h-4 w-4 shrink-0 translate-y-0.5" strokeWidth={1.75} />
+          )}
+          {errorMessage || "The web search request failed. Try again in a moment."}
         </Card>
       )}
 
@@ -68,15 +87,20 @@ export function WebResults({ query }: { query: string }) {
         <div className="flex flex-col gap-2">
           {results.map((result) => (
             <Card key={result.url} className="p-4">
-              <a
-                href={result.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm font-medium text-accent hover:underline"
-              >
-                {result.title}
-              </a>
-              <p className="mt-0.5 truncate text-xs text-muted">{result.url}</p>
+              <div className="flex items-center gap-2">
+                <a
+                  href={result.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-medium text-accent hover:underline"
+                >
+                  {result.title}
+                </a>
+              </div>
+              <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted">
+                <Icons.Link2 className="h-3 w-3 shrink-0" strokeWidth={1.75} />
+                {result.domain}
+              </p>
               {result.snippet && <p className="mt-1 text-sm">{result.snippet}</p>}
             </Card>
           ))}
