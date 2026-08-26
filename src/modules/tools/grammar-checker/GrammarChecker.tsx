@@ -15,10 +15,7 @@ export function GrammarChecker() {
   const { status, output, errorMessage, errorKind, run } = useAiCompletion();
 
   function handleCheck() {
-    void run(text, {
-      system:
-        "You are a precise grammar and spelling checker. Return the corrected text, then on a new line starting with 'Changes:' briefly list what you fixed. If there are no issues, say so.",
-    });
+    void run("grammar", { text });
   }
 
   return (

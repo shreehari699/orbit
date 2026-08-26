@@ -17,27 +17,6 @@ const tool = getToolById("pdf-intelligence")!;
 
 type Status = "idle" | "loading" | "ready" | "error";
 
-// Cap what actually reaches the model — a large PDF's full text still
-// costs tokens even at Gemini's free-tier prices, and most documents
-// people ask ORBIT about fit comfortably under this. A true chunk +
-// embedding retrieval pipeline is documented as a future upgrade in
-// supabase/README.md once a reachable Postgres (pgvector) exists; this
-// is the honest, working version until then.
-const MAX_CONTEXT_CHARS = 20_000;
-
-function groundedSystemPrompt(documentText: string): string {
-  return [
-    "You answer questions about ONE document, and ONLY from that document's content below.",
-    "Never use outside/general knowledge to fill gaps.",
-    "If the answer is not in the document, say plainly: \"This isn't covered in the document.\" Do not guess.",
-    "When you do answer, cite the page it came from in the form (p. N) using the [Page N] markers in the text.",
-    "",
-    "--- DOCUMENT START ---",
-    documentText.slice(0, MAX_CONTEXT_CHARS),
-    "--- DOCUMENT END ---",
-  ].join("\n");
-}
-
 export function PdfIntelligence() {
   const [status, setStatus] = useState<Status>("idle");
   const [fileName, setFileName] = useState("");
@@ -66,14 +45,12 @@ export function PdfIntelligence() {
 
   function handleSummarize() {
     if (!result?.text) return;
-    void summaryAi.run("Summarize this document in 3-5 concise bullet points, citing pages where useful.", {
-      system: groundedSystemPrompt(result.text),
-    });
+    void summaryAi.run("pdf-summary", { documentText: result.text });
   }
 
   function handleAsk() {
     if (!result?.text || !question.trim()) return;
-    void qaAi.run(question, { system: groundedSystemPrompt(result.text) });
+    void qaAi.run("pdf-qa", { documentText: result.text, question });
   }
 
   return (

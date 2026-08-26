@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 
-import { requestAiCompletion } from "./client";
+import { requestAiTask } from "./client";
 import type { AiErrorKind } from "./types";
+import type { TaskId } from "./engine";
 
 export type AiCompletionStatus = "idle" | "loading" | "done" | "not-configured" | "error";
 
@@ -15,13 +16,13 @@ export function useAiCompletion() {
   const [errorMessage, setErrorMessage] = useState("");
   const [errorKind, setErrorKind] = useState<AiErrorKind | null>(null);
 
-  async function run(prompt: string, options?: { system?: string; maxTokens?: number }) {
+  async function run(taskId: TaskId, input: unknown) {
     setStatus("loading");
     setOutput("");
     setErrorMessage("");
     setErrorKind(null);
     try {
-      const response = await requestAiCompletion(prompt, options);
+      const response = await requestAiTask(taskId, input);
       if (!response.configured) {
         setStatus("not-configured");
         return;

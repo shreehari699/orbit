@@ -17,9 +17,7 @@ export function EmailWriter() {
   const { status, output, errorMessage, errorKind, run } = useAiCompletion();
 
   function handleRun() {
-    void run(description, {
-      system: `Draft a complete, ready-to-send email in a ${tone.toLowerCase()} tone based on the user's description of what they need to say. Include a subject line. Respond only with the subject and email body.`,
-    });
+    void run("email", { description, tone });
   }
 
   return (

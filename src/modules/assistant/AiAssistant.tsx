@@ -7,7 +7,6 @@ import * as Icons from "lucide-react";
 import { getToolById, TOOLS } from "@/registry/tools";
 import { getZeroDegreeApps } from "@/registry/apps";
 import { useAiCompletion } from "@/lib/ai/useAiCompletion";
-import { buildAssistantSystemPrompt, buildConversationPrompt } from "./prompts";
 import { parseAssistantReply, type AssistantAction } from "./parseReply";
 import { ToolHeader } from "@/components/tools/ToolHeader";
 import { Card } from "@/components/ui/Card";
@@ -74,12 +73,8 @@ export function AiAssistant() {
     setInput("");
     pendingReplyRef.current = true;
 
-    void ai.run(buildConversationPrompt(nextMessages), {
-      system: buildAssistantSystemPrompt(),
-      // Generous headroom for "thinking" models (confirmed live: gemini-3.6-flash
-      // spends part of maxOutputTokens on internal reasoning before the visible
-      // reply), even though the assistant's own replies are meant to stay short.
-      maxTokens: 800,
+    void ai.run("assistant-chat", {
+      conversation: nextMessages.map(({ role, content }) => ({ role, content })),
     });
   }
 

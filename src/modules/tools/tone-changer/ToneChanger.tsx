@@ -17,9 +17,7 @@ export function ToneChanger() {
   const { status, output, errorMessage, errorKind, run } = useAiCompletion();
 
   function handleRun() {
-    void run(text, {
-      system: `Rewrite the given text in a ${tone.toLowerCase()} tone, keeping the same meaning and roughly the same length. Respond only with the rewritten text.`,
-    });
+    void run("tone", { text, tone });
   }
 
   return (

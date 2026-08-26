@@ -15,10 +15,7 @@ export function TextRewriter() {
   const { status, output, errorMessage, errorKind, run } = useAiCompletion();
 
   function handleRewrite() {
-    void run(text, {
-      system:
-        "Rewrite the given text to be clearer and better written, while preserving its exact meaning and roughly its length. Respond only with the rewritten text.",
-    });
+    void run("rewrite", { text });
   }
 
   return (

@@ -16,12 +16,7 @@ export function TextSummarizer() {
   const { status, output, errorMessage, errorKind, run } = useAiCompletion();
 
   function handleSummarize() {
-    void run(text, {
-      system:
-        style === "bullets"
-          ? "Summarize the given text as 3-6 concise bullet points. Respond only with the bullets."
-          : "Summarize the given text in a single, tight paragraph of 2-4 sentences.",
-    });
+    void run("summarize", { text, style });
   }
 
   return (

@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { getAiProvider, ProviderNotConfiguredError, AiProviderRequestError } from "@/lib/ai";
+import { runTask, TASK_SCHEMAS, TaskValidationError, type TaskId } from "@/lib/ai/engine";
+import { AiProviderRequestError, type AiErrorKind } from "@/lib/ai";
 import { checkRateLimit, getClientKey } from "@/lib/rate-limit";
-import type { AiErrorKind } from "@/lib/ai";
 
-const MAX_PROMPT_LENGTH = 20_000;
 // Confirmed live against Gemini's free tier during testing: the whole
 // project (this API key) is capped at 20 generateContent requests/minute
 // — a project-wide budget, not per-user. A per-client limit equal to
@@ -34,41 +33,27 @@ export async function POST(request: Request) {
     );
   }
 
-  const body = (await request.json().catch(() => null)) as
-    | { prompt?: string; system?: string; maxTokens?: number }
-    | null;
+  const body = (await request.json().catch(() => null)) as { taskId?: string; input?: unknown } | null;
 
-  if (!body?.prompt || typeof body.prompt !== "string" || !body.prompt.trim()) {
-    return NextResponse.json({ error: "A non-empty `prompt` string is required." }, { status: 400 });
+  if (!body?.taskId || typeof body.taskId !== "string" || !(body.taskId in TASK_SCHEMAS)) {
+    return NextResponse.json({ error: "A valid `taskId` is required." }, { status: 400 });
   }
-  if (body.prompt.length > MAX_PROMPT_LENGTH) {
-    return NextResponse.json(
-      { configured: true, error: ERROR_MESSAGES.oversized_input, errorKind: "oversized_input" satisfies AiErrorKind },
-      { status: 413 },
-    );
-  }
-
-  const provider = getAiProvider();
-
-  if (!provider.configured) {
-    return NextResponse.json({ configured: false }, { status: 200 });
-  }
+  const taskId = body.taskId as TaskId;
 
   try {
-    const result = await provider.complete({
-      prompt: body.prompt,
-      system: body.system,
-      maxTokens: body.maxTokens,
-    });
-    return NextResponse.json({ configured: true, ...result });
+    const result = await runTask(taskId, body.input);
+    if (!("configured" in result) || result.configured !== false) {
+      return NextResponse.json({ configured: true, ...result });
+    }
+    return NextResponse.json({ configured: false }, { status: 200 });
   } catch (error) {
-    if (error instanceof ProviderNotConfiguredError) {
-      return NextResponse.json({ configured: false }, { status: 200 });
+    if (error instanceof TaskValidationError) {
+      return NextResponse.json({ error: `Invalid input: ${error.message}` }, { status: 400 });
     }
     if (error instanceof AiProviderRequestError) {
       // Log the real error server-side for diagnosis; never forward the
       // provider's raw message (it can echo request fragments) to the client.
-      console.error(`[api/ai/complete] ${error.kind}:`, error.message);
+      console.error(`[api/ai/complete] ${taskId} ${error.kind}:`, error.message);
       const status = error.kind === "rate_limited" ? 429 : error.kind === "timeout" ? 504 : 502;
       return NextResponse.json(
         { configured: true, error: ERROR_MESSAGES[error.kind], errorKind: error.kind },

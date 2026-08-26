@@ -15,10 +15,7 @@ export function Paraphraser() {
   const { status, output, errorMessage, errorKind, run } = useAiCompletion();
 
   function handleParaphrase() {
-    void run(text, {
-      system:
-        "Paraphrase the given text using substantially different wording and sentence structure, while keeping the same meaning. Respond only with the paraphrased text.",
-    });
+    void run("paraphrase", { text });
   }
 
   return (
