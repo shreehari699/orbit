@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import * as Icons from "lucide-react";
 
 import { SidebarContent } from "./Sidebar";
@@ -8,11 +8,33 @@ import { usePalette } from "@/components/command/palette-context";
 import { OrbitWordmark } from "@/components/brand/Logo";
 
 function MobileNav({ open, onClose }: { open: boolean; onClose: () => void }) {
+  useEffect(() => {
+    if (!open) return;
+    document.body.style.overflow = "hidden";
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open, onClose]);
+
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-40 lg:hidden">
-      <button aria-label="Close menu" className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative flex h-full w-72 max-w-[80vw] flex-col border-r border-border bg-surface">
+      <button
+        aria-label="Close menu"
+        className="absolute inset-0 bg-black/40 orbit-fade-in"
+        onClick={onClose}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation"
+        className="orbit-drawer-enter relative flex h-full w-72 max-w-[80vw] flex-col border-r border-border bg-surface"
+      >
         <SidebarContent onNavigate={onClose} />
       </div>
     </div>
@@ -31,7 +53,7 @@ export function Topbar() {
           onClick={() => setMobileOpen(true)}
           className="rounded-lg p-2 text-muted hover:bg-black/[0.04] hover:text-foreground dark:hover:bg-white/[0.06] lg:hidden"
         >
-          <Icons.Menu className="h-5 w-5" strokeWidth={1.75} />
+          <Icons.Menu className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
         </button>
 
         <div className="lg:hidden">
@@ -40,9 +62,10 @@ export function Topbar() {
 
         <button
           onClick={toggle}
-          className="ml-auto flex w-full max-w-sm items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-left text-sm text-muted transition hover:border-accent/40"
+          aria-label="Search ORBIT (Cmd+K)"
+          className="ml-auto flex w-full max-w-sm items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-left text-sm text-muted transition-colors hover:border-accent/40"
         >
-          <Icons.Search className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+          <Icons.Search className="h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
           <span className="flex-1 truncate">Search ORBIT…</span>
           <kbd className="hidden shrink-0 rounded border border-border px-1.5 py-0.5 text-[10px] sm:block">
             ⌘K

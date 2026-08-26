@@ -27,6 +27,9 @@ const serverSchema = z.object({
 
   OPENAI_IMAGE_API_KEY: optionalString,
   STABILITY_API_KEY: optionalString,
+
+  BRAVE_SEARCH_API_KEY: optionalString,
+  SERPER_API_KEY: optionalString,
 });
 
 const clientSchema = z.object({

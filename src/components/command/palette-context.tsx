@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 interface PaletteContextValue {
   open: boolean;
@@ -13,6 +13,7 @@ const PaletteContext = createContext<PaletteContextValue | null>(null);
 export function PaletteProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const toggle = useCallback(() => setOpen((o) => !o), []);
+  const lastFocused = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -28,6 +29,22 @@ export function PaletteProvider({ children }: { children: React.ReactNode }) {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [toggle]);
+
+  // Restores keyboard focus to whatever triggered the palette once it
+  // closes, and locks background scroll while it's open — standard modal
+  // dialog behavior, not just a conditional render.
+  useEffect(() => {
+    if (open) {
+      lastFocused.current = document.activeElement as HTMLElement | null;
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+      lastFocused.current?.focus();
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
 
   const value = useMemo(() => ({ open, setOpen, toggle }), [open, toggle]);
 

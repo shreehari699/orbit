@@ -8,6 +8,7 @@ import { getQuickAnswer } from "@/registry/quick-answers";
 import { getFavorites } from "@/lib/workspace/favorites";
 import { ToolCard } from "@/components/tools/ToolCard";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { WebResults } from "@/components/search/WebResults";
 
 /**
  * The dedicated Search surface — the same engine as the Cmd+K palette, but
@@ -67,6 +68,8 @@ export function SearchView() {
           ))}
         </div>
       )}
+
+      {query.trim() && <WebResults query={query} />}
     </div>
   );
 }

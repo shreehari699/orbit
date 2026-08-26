@@ -9,12 +9,15 @@ import { getQuickAnswer } from "@/registry/quick-answers";
 import { searchTools } from "@/registry/search";
 import { recordVisit } from "@/lib/workspace/history";
 
+const FOCUSABLE_SELECTOR = 'input, button:not([tabindex="-1"]), [href], [tabindex]:not([tabindex="-1"])';
+
 export function CommandPalette() {
   const { open, setOpen } = usePalette();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [highlighted, setHighlighted] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   const quickAnswer = useMemo(() => getQuickAnswer(query), [query]);
   const results = useMemo(() => searchTools(query).slice(0, 8), [query]);
@@ -37,6 +40,21 @@ export function CommandPalette() {
     router.push(href);
   }
 
+  function trapFocus(event: React.KeyboardEvent) {
+    if (event.key !== "Tab" || !panelRef.current) return;
+    const focusable = Array.from(panelRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+    if (focusable.length === 0) return;
+    const first = focusable[0]!;
+    const last = focusable[focusable.length - 1]!;
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
   function onKeyDown(event: React.KeyboardEvent) {
     if (event.key === "ArrowDown") {
       event.preventDefault();
@@ -47,6 +65,8 @@ export function CommandPalette() {
     } else if (event.key === "Enter") {
       const result = results[highlighted];
       if (result) go(result.tool.href, result.tool.id, result.tool.label);
+    } else {
+      trapFocus(event);
     }
   }
 
@@ -55,19 +75,27 @@ export function CommandPalette() {
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 pt-[12vh] backdrop-blur-sm">
       <button
-        aria-label="Close command palette"
+        aria-hidden="true"
+        tabIndex={-1}
         className="absolute inset-0"
         onClick={() => setOpen(false)}
       />
-      <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-surface-raised shadow-2xl">
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Command palette"
+        onKeyDown={onKeyDown}
+        className="orbit-palette-enter relative w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-surface-raised shadow-2xl"
+      >
         <div className="flex items-center gap-2 border-b border-border px-4">
-          <Icons.Search className="h-4 w-4 shrink-0 text-muted" strokeWidth={1.75} />
+          <Icons.Search className="h-4 w-4 shrink-0 text-muted" strokeWidth={1.75} aria-hidden="true" />
           <input
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={onKeyDown}
             placeholder="Search tools, or try “12 km to miles”, “40% of 250”…"
+            aria-label="Search ORBIT"
             className="w-full bg-transparent py-3.5 text-sm outline-none placeholder:text-muted"
           />
           <kbd className="hidden shrink-0 rounded border border-border px-1.5 py-0.5 text-[10px] text-muted sm:block">
@@ -87,7 +115,7 @@ export function CommandPalette() {
           </div>
         )}
 
-        <div className="orbit-scrollbar max-h-72 overflow-y-auto p-2">
+        <div className="orbit-scrollbar max-h-72 overflow-y-auto p-2" role="listbox" aria-label="Search results">
           {results.length === 0 && (
             <p className="px-3 py-6 text-center text-sm text-muted">No tools match “{query}”.</p>
           )}
@@ -97,15 +125,17 @@ export function CommandPalette() {
             return (
               <button
                 key={result.tool.id}
+                role="option"
+                aria-selected={index === highlighted}
                 onMouseEnter={() => setHighlighted(index)}
                 onClick={() => go(result.tool.href, result.tool.id, result.tool.label)}
-                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition ${
+                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
                   index === highlighted
                     ? "bg-accent/10 text-foreground"
                     : "text-muted hover:bg-black/[0.03] dark:hover:bg-white/[0.05]"
                 }`}
               >
-                <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
                 <span className="flex-1 truncate">
                   <span className="text-foreground">{result.tool.label}</span>
                   <span className="ml-2 text-xs text-muted">{result.tool.description}</span>

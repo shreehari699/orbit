@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 :root {
   --background: #fafafa;
@@ -65,4 +66,40 @@ body {
 .orbit-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes orbit-palette-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .orbit-palette-enter {
+    animation: orbit-palette-in 140ms ease-out;
+  }
+
+  .orbit-fade-in {
+    animation: orbit-palette-in 160ms ease-out;
+  }
+
+  @keyframes orbit-drawer-in {
+    from {
+      transform: translateX(-12px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  .orbit-drawer-enter {
+    animation: orbit-drawer-in 180ms ease-out;
+  }
 }
