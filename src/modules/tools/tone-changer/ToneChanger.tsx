@@ -14,7 +14,7 @@ const TONES = ["Formal", "Friendly", "Confident", "Casual", "Empathetic", "Persu
 export function ToneChanger() {
   const [text, setText] = useState("");
   const [tone, setTone] = useState<(typeof TONES)[number]>("Formal");
-  const { status, output, run } = useAiCompletion();
+  const { status, output, errorMessage, errorKind, run } = useAiCompletion();
 
   function handleRun() {
     void run(text, {
@@ -46,7 +46,7 @@ export function ToneChanger() {
         Change tone
       </Button>
 
-      <AiResultPanel status={status} output={output} />
+      <AiResultPanel status={status} output={output} errorMessage={errorMessage} errorKind={errorKind} />
     </div>
   );
 }

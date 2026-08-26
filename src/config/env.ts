@@ -22,6 +22,8 @@ const serverSchema = z.object({
 
   SUPABASE_SERVICE_ROLE_KEY: optionalString,
 
+  GEMINI_API_KEY: optionalString,
+  GEMINI_MODEL: optionalString,
   ANTHROPIC_API_KEY: optionalString,
   OPENAI_API_KEY: optionalString,
 

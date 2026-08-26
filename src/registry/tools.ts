@@ -61,6 +61,16 @@ export const TOOLS: ToolDef[] = [
 
   // --- AI Writing (requires a configured AI provider) ----------------------
   {
+    id: "ai-assistant",
+    label: "ORBIT AI Assistant",
+    description: "Ask what ORBIT can do — it points you to the right tool, it doesn't pretend to run it.",
+    href: "/assistant",
+    category: "ai",
+    icon: "Bot",
+    keywords: ["assistant", "chat", "help", "ai", "find a tool", "what can orbit do"],
+    requiresProvider: "ai",
+  },
+  {
     id: "grammar-checker",
     label: "Grammar Checker",
     description: "Find and fix grammar, spelling, and punctuation issues.",
@@ -280,6 +290,15 @@ export const TOOLS: ToolDef[] = [
     category: "document",
     icon: "FileSearch",
     keywords: ["pdf", "extract", "summary", "document", "text extraction"],
+  },
+  {
+    id: "pdf-compressor",
+    label: "PDF Compressor",
+    description: "Shrink a PDF's file size by re-encoding pages as compressed images.",
+    href: "/tools/pdf-compressor",
+    category: "document",
+    icon: "FileArchive",
+    keywords: ["pdf", "compress", "shrink", "reduce", "file size", "smaller"],
   },
   {
     id: "pdf-merger",

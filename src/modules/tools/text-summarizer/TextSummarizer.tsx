@@ -13,7 +13,7 @@ const tool = getToolById("text-summarizer")!;
 export function TextSummarizer() {
   const [text, setText] = useState("");
   const [style, setStyle] = useState<"bullets" | "paragraph">("bullets");
-  const { status, output, run } = useAiCompletion();
+  const { status, output, errorMessage, errorKind, run } = useAiCompletion();
 
   function handleSummarize() {
     void run(text, {
@@ -49,7 +49,7 @@ export function TextSummarizer() {
         Summarize
       </Button>
 
-      <AiResultPanel status={status} output={output} />
+      <AiResultPanel status={status} output={output} errorMessage={errorMessage} errorKind={errorKind} />
     </div>
   );
 }

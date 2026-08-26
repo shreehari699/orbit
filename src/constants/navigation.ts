@@ -7,6 +7,7 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   { label: "Command Center", href: "/command", icon: "LayoutGrid", group: "main" },
+  { label: "ORBIT Assistant", href: "/assistant", icon: "Bot", group: "main" },
   { label: "Search", href: "/search", icon: "Search", group: "main" },
   { label: "Tools", href: "/tools", icon: "Boxes", group: "main" },
   { label: "Favorites", href: "/favorites", icon: "Star", group: "main" },

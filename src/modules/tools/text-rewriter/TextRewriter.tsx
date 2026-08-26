@@ -12,7 +12,7 @@ const tool = getToolById("text-rewriter")!;
 
 export function TextRewriter() {
   const [text, setText] = useState("");
-  const { status, output, run } = useAiCompletion();
+  const { status, output, errorMessage, errorKind, run } = useAiCompletion();
 
   function handleRewrite() {
     void run(text, {
@@ -37,7 +37,7 @@ export function TextRewriter() {
         Rewrite
       </Button>
 
-      <AiResultPanel status={status} output={output} />
+      <AiResultPanel status={status} output={output} errorMessage={errorMessage} errorKind={errorKind} />
     </div>
   );
 }

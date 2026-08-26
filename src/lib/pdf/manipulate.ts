@@ -62,3 +62,26 @@ export async function imagesToPdf(files: File[]): Promise<Uint8Array> {
   }
   return doc.save();
 }
+
+/**
+ * Rebuilds a PDF from JPEG-rendered pages, sized back to each page's
+ * original PDF-point dimensions (not the rendered pixel dimensions) so
+ * the output looks and prints the same size as the source. This is the
+ * "compress" strategy: re-encoding every page as a quality-reduced JPEG
+ * shrinks file size dramatically for image-heavy/scanned PDFs, at the
+ * honest cost of the result no longer having selectable text — real
+ * structural stream recompression (keeping vector text as text) is a
+ * different, much larger engineering effort than this tool attempts.
+ */
+export async function pdfFromJpegPages(
+  pages: { blob: Blob; widthPt: number; heightPt: number }[],
+): Promise<Uint8Array> {
+  const doc = await PDFDocument.create();
+  for (const page of pages) {
+    const bytes = await page.blob.arrayBuffer();
+    const image = await doc.embedJpg(bytes);
+    const pdfPage = doc.addPage([page.widthPt, page.heightPt]);
+    pdfPage.drawImage(image, { x: 0, y: 0, width: page.widthPt, height: page.heightPt });
+  }
+  return doc.save();
+}

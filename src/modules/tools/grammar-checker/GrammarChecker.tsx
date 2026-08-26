@@ -12,7 +12,7 @@ const tool = getToolById("grammar-checker")!;
 
 export function GrammarChecker() {
   const [text, setText] = useState("");
-  const { status, output, run } = useAiCompletion();
+  const { status, output, errorMessage, errorKind, run } = useAiCompletion();
 
   function handleCheck() {
     void run(text, {
@@ -37,7 +37,7 @@ export function GrammarChecker() {
         Check grammar
       </Button>
 
-      <AiResultPanel status={status} output={output} />
+      <AiResultPanel status={status} output={output} errorMessage={errorMessage} errorKind={errorKind} />
     </div>
   );
 }

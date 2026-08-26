@@ -5,25 +5,37 @@ import * as Icons from "lucide-react";
 
 import { getToolById } from "@/registry/tools";
 import { extractPdf, type PdfExtractionResult } from "@/lib/pdf/extract";
-import { requestAiCompletion } from "@/lib/ai/client";
+import { useAiCompletion } from "@/lib/ai/useAiCompletion";
 import { ToolHeader } from "@/components/tools/ToolHeader";
+import { AiResultPanel } from "@/components/tools/AiResultPanel";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { CopyButton } from "@/components/ui/CopyButton";
-import { Badge } from "@/components/ui/Badge";
+import { StatCard } from "@/components/ui/StatCard";
 
 const tool = getToolById("pdf-intelligence")!;
 
 type Status = "idle" | "loading" | "ready" | "error";
-type SummaryStatus = "idle" | "loading" | "ready" | "not-configured" | "error";
 
-function Stat({ label, value }: { label: string; value: string | number }) {
-  return (
-    <Card className="p-4">
-      <p className="text-2xl font-semibold tabular-nums">{value}</p>
-      <p className="mt-0.5 text-xs text-muted">{label}</p>
-    </Card>
-  );
+// Cap what actually reaches the model — a large PDF's full text still
+// costs tokens even at Gemini's free-tier prices, and most documents
+// people ask ORBIT about fit comfortably under this. A true chunk +
+// embedding retrieval pipeline is documented as a future upgrade in
+// supabase/README.md once a reachable Postgres (pgvector) exists; this
+// is the honest, working version until then.
+const MAX_CONTEXT_CHARS = 20_000;
+
+function groundedSystemPrompt(documentText: string): string {
+  return [
+    "You answer questions about ONE document, and ONLY from that document's content below.",
+    "Never use outside/general knowledge to fill gaps.",
+    "If the answer is not in the document, say plainly: \"This isn't covered in the document.\" Do not guess.",
+    "When you do answer, cite the page it came from in the form (p. N) using the [Page N] markers in the text.",
+    "",
+    "--- DOCUMENT START ---",
+    documentText.slice(0, MAX_CONTEXT_CHARS),
+    "--- DOCUMENT END ---",
+  ].join("\n");
 }
 
 export function PdfIntelligence() {
@@ -31,8 +43,9 @@ export function PdfIntelligence() {
   const [fileName, setFileName] = useState("");
   const [error, setError] = useState("");
   const [result, setResult] = useState<PdfExtractionResult | null>(null);
-  const [summaryStatus, setSummaryStatus] = useState<SummaryStatus>("idle");
-  const [summary, setSummary] = useState("");
+  const [question, setQuestion] = useState("");
+  const summaryAi = useAiCompletion();
+  const qaAi = useAiCompletion();
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function handleFile(file: File) {
@@ -40,8 +53,7 @@ export function PdfIntelligence() {
     setStatus("loading");
     setError("");
     setResult(null);
-    setSummary("");
-    setSummaryStatus("idle");
+    setQuestion("");
     try {
       const extracted = await extractPdf(file);
       setResult(extracted);
@@ -52,27 +64,16 @@ export function PdfIntelligence() {
     }
   }
 
-  async function handleSummarize() {
+  function handleSummarize() {
     if (!result?.text) return;
-    setSummaryStatus("loading");
-    try {
-      const response = await requestAiCompletion(
-        `Summarize the following document in 3-5 concise bullet points:\n\n${result.text.slice(0, 12000)}`,
-        { system: "You are a precise document summarizer. Respond only with the bullet points." },
-      );
-      if (!response.configured) {
-        setSummaryStatus("not-configured");
-        return;
-      }
-      if (response.error) {
-        setSummaryStatus("error");
-        return;
-      }
-      setSummary(response.text ?? "");
-      setSummaryStatus("ready");
-    } catch {
-      setSummaryStatus("error");
-    }
+    void summaryAi.run("Summarize this document in 3-5 concise bullet points, citing pages where useful.", {
+      system: groundedSystemPrompt(result.text),
+    });
+  }
+
+  function handleAsk() {
+    if (!result?.text || !question.trim()) return;
+    void qaAi.run(question, { system: groundedSystemPrompt(result.text) });
   }
 
   return (
@@ -115,48 +116,77 @@ export function PdfIntelligence() {
       {status === "ready" && result && (
         <>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Stat label="Pages" value={result.pageCount} />
-            <Stat label="Words" value={result.words} />
-            <Stat label="Characters" value={result.characters} />
-            <Stat
+            <StatCard label="Pages" value={result.pageCount} />
+            <StatCard label="Words" value={result.words} />
+            <StatCard label="Characters" value={result.characters} />
+            <StatCard
               label="Reading time"
               value={result.readingMinutes < 1 ? "< 1 min" : `${Math.ceil(result.readingMinutes)} min`}
             />
           </div>
 
-          <Card className="flex flex-col gap-3 p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Icons.Sparkles className="h-4 w-4 text-accent" strokeWidth={1.75} />
-                <span className="text-sm font-medium">AI summary</span>
-                {summaryStatus === "not-configured" && <Badge tone="neutral">Not configured</Badge>}
-              </div>
-              <Button
-                variant="secondary"
-                onClick={handleSummarize}
-                disabled={summaryStatus === "loading" || !result.text}
-              >
-                {summaryStatus === "loading" ? "Summarizing…" : "Generate summary"}
-              </Button>
-            </div>
+          {!result.text ? (
+            <Card className="p-4 text-sm text-muted">
+              No extractable text found — this PDF may be scanned images only. Try{" "}
+              <a href="/tools/image-to-text" className="text-accent hover:underline">
+                Image → Text (OCR)
+              </a>{" "}
+              on a page screenshot instead.
+            </Card>
+          ) : (
+            <>
+              <Card className="flex flex-col gap-3 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Icons.Sparkles className="h-4 w-4 text-accent" strokeWidth={1.75} />
+                    <span className="text-sm font-medium">AI summary</span>
+                  </div>
+                  <Button variant="secondary" onClick={handleSummarize} disabled={summaryAi.status === "loading"}>
+                    {summaryAi.status === "loading" ? "Summarizing…" : "Generate summary"}
+                  </Button>
+                </div>
+                <AiResultPanel
+                  status={summaryAi.status}
+                  output={summaryAi.output}
+                  errorMessage={summaryAi.errorMessage}
+                  errorKind={summaryAi.errorKind}
+                />
+              </Card>
 
-            {summaryStatus === "not-configured" && (
-              <p className="text-sm text-muted">
-                No AI provider is configured. Set <code className="rounded bg-black/[0.05] px-1 dark:bg-white/[0.08]">ANTHROPIC_API_KEY</code>{" "}
-                or <code className="rounded bg-black/[0.05] px-1 dark:bg-white/[0.08]">OPENAI_API_KEY</code> to enable this — see{" "}
-                <code className="rounded bg-black/[0.05] px-1 dark:bg-white/[0.08]">.env.example</code>.
-              </p>
-            )}
-            {summaryStatus === "error" && (
-              <p className="text-sm text-danger">The AI provider request failed. Try again in a moment.</p>
-            )}
-            {summaryStatus === "ready" && (
-              <p className="whitespace-pre-wrap text-sm">{summary}</p>
-            )}
-            {!result.text && (
-              <p className="text-sm text-muted">No extractable text found — this PDF may be scanned images only.</p>
-            )}
-          </Card>
+              <Card className="flex flex-col gap-3 p-4">
+                <div className="flex items-center gap-2">
+                  <Icons.MessageCircleQuestion className="h-4 w-4 text-accent" strokeWidth={1.75} />
+                  <span className="text-sm font-medium">Ask the document</span>
+                </div>
+                <p className="text-xs text-muted">
+                  Answers are grounded only in this document&apos;s text — if it&apos;s not in there, ORBIT says so
+                  instead of guessing.
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    value={question}
+                    onChange={(e) => setQuestion(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleAsk()}
+                    placeholder="e.g. What does this document say about pricing?"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent/50"
+                  />
+                  <Button
+                    variant="primary"
+                    onClick={handleAsk}
+                    disabled={!question.trim() || qaAi.status === "loading"}
+                  >
+                    Ask
+                  </Button>
+                </div>
+                <AiResultPanel
+                  status={qaAi.status}
+                  output={qaAi.output}
+                  errorMessage={qaAi.errorMessage}
+                  errorKind={qaAi.errorKind}
+                />
+              </Card>
+            </>
+          )}
 
           <div>
             <div className="mb-1.5 flex items-center justify-between">

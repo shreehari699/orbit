@@ -14,7 +14,7 @@ const TONES = ["Professional", "Friendly", "Direct", "Apologetic"] as const;
 export function EmailWriter() {
   const [description, setDescription] = useState("");
   const [tone, setTone] = useState<(typeof TONES)[number]>("Professional");
-  const { status, output, run } = useAiCompletion();
+  const { status, output, errorMessage, errorKind, run } = useAiCompletion();
 
   function handleRun() {
     void run(description, {
@@ -46,7 +46,7 @@ export function EmailWriter() {
         Write email
       </Button>
 
-      <AiResultPanel status={status} output={output} />
+      <AiResultPanel status={status} output={output} errorMessage={errorMessage} errorKind={errorKind} />
     </div>
   );
 }
