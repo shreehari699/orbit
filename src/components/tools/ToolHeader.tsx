@@ -21,7 +21,7 @@ export function ToolHeader({ tool }: { tool: ToolDef }) {
   return (
     <div className="flex items-start justify-between gap-4">
       <div className="flex items-start gap-3">
-        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent">
+        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-control bg-accent/10 text-accent">
           <Icon className="h-5 w-5" strokeWidth={1.75} />
         </div>
         <div>
@@ -35,7 +35,7 @@ export function ToolHeader({ tool }: { tool: ToolDef }) {
           const next = toggleFavorite({ toolId: tool.id, label: tool.label, href: tool.href });
           setFavorited(next.some((f) => f.toolId === tool.id));
         }}
-        className="shrink-0 rounded-lg p-2 text-muted transition hover:bg-black/[0.04] hover:text-accent dark:hover:bg-white/[0.06]"
+        className="orbit-focus shrink-0 rounded-control p-2 text-muted transition-colors hover:bg-black/[0.04] hover:text-accent dark:hover:bg-white/[0.06]"
       >
         <Icons.Star
           className="h-5 w-5"

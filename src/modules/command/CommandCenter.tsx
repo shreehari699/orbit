@@ -11,6 +11,8 @@ import { getHistory } from "@/lib/workspace/history";
 import type { FavoriteEntry, HistoryEntry } from "@/lib/workspace/types";
 import { ToolCard } from "@/components/tools/ToolCard";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion/primitives";
+import { OrbitCore } from "@/components/motion/OrbitCore";
 
 export function CommandCenter() {
   const [query, setQuery] = useState("");
@@ -32,14 +34,20 @@ export function CommandCenter() {
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-10 px-4 py-10 lg:px-8">
-      <div>
+      <div className="relative">
+        <div
+          className="pointer-events-none absolute -right-4 -top-10 hidden opacity-60 sm:block"
+          aria-hidden="true"
+        >
+          <OrbitCore size={140} />
+        </div>
         <h1 className="text-2xl font-semibold tracking-tight">Command Center</h1>
         <p className="mt-1 text-sm text-muted">
           Search a tool, or type a question — “15% of 340”, “2 kg to lb”, “count: your text”.
         </p>
       </div>
 
-      <div className="rounded-2xl border border-border bg-surface p-2 shadow-sm">
+      <div className="rounded-card border border-border bg-surface-raised p-2 shadow-[var(--shadow-card)] transition-colors focus-within:border-accent/40">
         <div className="flex items-center gap-2 px-3">
           <Icons.Sparkles className="h-4 w-4 shrink-0 text-accent" strokeWidth={1.75} />
           <input
@@ -50,13 +58,13 @@ export function CommandCenter() {
           />
         </div>
         {quickAnswer && (
-          <div className="mx-2 mb-1 rounded-xl bg-accent/5 px-4 py-3">
+          <FadeIn className="mx-2 mb-1 rounded-control bg-accent/5 px-4 py-3">
             <div className="text-[11px] uppercase tracking-wide text-muted">Quick answer</div>
             <div className="mt-0.5 flex items-baseline gap-2">
               <span className="text-xl font-semibold">{quickAnswer.result}</span>
               {quickAnswer.detail && <span className="text-xs text-muted">{quickAnswer.detail}</span>}
             </div>
-          </div>
+          </FadeIn>
         )}
       </div>
 
@@ -68,16 +76,17 @@ export function CommandCenter() {
           {searchResults.length === 0 ? (
             <EmptyState icon="SearchX" title="No tools match your search" />
           ) : (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <StaggerContainer className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {searchResults.map(({ tool }) => (
-                <ToolCard
-                  key={tool.id}
-                  tool={tool}
-                  favorited={favoriteIds.has(tool.id)}
-                  onFavoriteChange={refreshFavorites}
-                />
+                <StaggerItem key={tool.id}>
+                  <ToolCard
+                    tool={tool}
+                    favorited={favoriteIds.has(tool.id)}
+                    onFavoriteChange={refreshFavorites}
+                  />
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerContainer>
           )}
         </section>
       ) : (
@@ -94,20 +103,17 @@ export function CommandCenter() {
                 description="Star a tool to pin it here for one-tap access."
               />
             ) : (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <StaggerContainer className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {favorites.map((fav) => {
                   const tool = TOOLS.find((t) => t.id === fav.toolId);
                   if (!tool) return null;
                   return (
-                    <ToolCard
-                      key={tool.id}
-                      tool={tool}
-                      favorited
-                      onFavoriteChange={refreshFavorites}
-                    />
+                    <StaggerItem key={tool.id}>
+                      <ToolCard tool={tool} favorited onFavoriteChange={refreshFavorites} />
+                    </StaggerItem>
                   );
                 })}
-              </div>
+              </StaggerContainer>
             )}
           </section>
 
@@ -119,21 +125,22 @@ export function CommandCenter() {
             {history.length === 0 ? (
               <EmptyState icon="History" title="No activity yet" description="Tools you open will show up here." />
             ) : (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <StaggerContainer className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {history.slice(0, 6).map((entry) => {
                   const tool = TOOLS.find((t) => t.id === entry.toolId);
                   if (!tool) return null;
                   return (
-                    <ToolCard
-                      key={`${tool.id}-${entry.at}`}
-                      tool={tool}
-                      favorited={favoriteIds.has(tool.id)}
-                      onFavoriteChange={refreshFavorites}
-                      meta={`Opened ${new Date(entry.at).toLocaleString()}`}
-                    />
+                    <StaggerItem key={`${tool.id}-${entry.at}`}>
+                      <ToolCard
+                        tool={tool}
+                        favorited={favoriteIds.has(tool.id)}
+                        onFavoriteChange={refreshFavorites}
+                        meta={`Opened ${new Date(entry.at).toLocaleString()}`}
+                      />
+                    </StaggerItem>
                   );
                 })}
-              </div>
+              </StaggerContainer>
             )}
           </section>
 
@@ -143,16 +150,17 @@ export function CommandCenter() {
             return (
               <section key={category.id}>
                 <h2 className="mb-3 text-sm font-medium text-muted">{category.label}</h2>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <StaggerContainer className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {items.map((tool) => (
-                    <ToolCard
-                      key={tool.id}
-                      tool={tool}
-                      favorited={favoriteIds.has(tool.id)}
-                      onFavoriteChange={refreshFavorites}
-                    />
+                    <StaggerItem key={tool.id}>
+                      <ToolCard
+                        tool={tool}
+                        favorited={favoriteIds.has(tool.id)}
+                        onFavoriteChange={refreshFavorites}
+                      />
+                    </StaggerItem>
                   ))}
-                </div>
+                </StaggerContainer>
               </section>
             );
           })}

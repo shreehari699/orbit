@@ -25,7 +25,7 @@ export function IntegrationPage({
     <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-10 lg:px-8">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3">
-          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent">
+          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-control bg-accent/10 text-accent">
             <Icon className="h-5 w-5" strokeWidth={1.75} />
           </div>
           <div>
@@ -46,7 +46,7 @@ export function IntegrationPage({
               href={app.url!}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground transition hover:opacity-90"
+              className="orbit-focus inline-flex w-fit items-center gap-1.5 rounded-control bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90"
             >
               Open {app.name}
               <Icons.ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.75} />

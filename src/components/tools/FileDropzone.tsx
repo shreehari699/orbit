@@ -41,7 +41,7 @@ export function FileDropzone({
       />
       <button
         onClick={() => inputRef.current?.click()}
-        className="flex w-full flex-col items-center gap-2 rounded-2xl border border-dashed border-border bg-surface px-6 py-12 text-center transition hover:border-accent/40"
+        className="orbit-focus flex w-full flex-col items-center gap-2 rounded-card border border-dashed border-border bg-surface px-6 py-12 text-center transition-colors duration-150 hover:border-accent/40 hover:bg-accent/[0.03]"
       >
         <Icons.FileUp className="h-7 w-7 text-accent" strokeWidth={1.5} />
         <p className="text-sm font-medium">{label}</p>

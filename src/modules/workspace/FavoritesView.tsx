@@ -8,6 +8,7 @@ import { getFavorites } from "@/lib/workspace/favorites";
 import type { FavoriteEntry } from "@/lib/workspace/types";
 import { ToolCard } from "@/components/tools/ToolCard";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { StaggerContainer, StaggerItem } from "@/components/motion/primitives";
 
 export function FavoritesView() {
   const [favorites, setFavorites] = useState<FavoriteEntry[] | null>(null);
@@ -30,21 +31,22 @@ export function FavoritesView() {
           description="Star any tool from the Command Center, Search, or its own page to pin it here."
         />
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <StaggerContainer className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {favorites.map((fav) => {
             const tool = TOOLS.find((t) => t.id === fav.toolId);
             if (!tool) return null;
             return (
-              <ToolCard
-                key={tool.id}
-                tool={tool}
-                favorited
-                onFavoriteChange={() => setFavorites(getFavorites())}
-                meta={`Pinned ${new Date(fav.addedAt).toLocaleDateString()}`}
-              />
+              <StaggerItem key={tool.id}>
+                <ToolCard
+                  tool={tool}
+                  favorited
+                  onFavoriteChange={() => setFavorites(getFavorites())}
+                  meta={`Pinned ${new Date(fav.addedAt).toLocaleDateString()}`}
+                />
+              </StaggerItem>
             );
           })}
-        </div>
+        </StaggerContainer>
       )}
     </div>
   );

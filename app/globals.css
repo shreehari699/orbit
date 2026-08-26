@@ -2,32 +2,54 @@
 @plugin "@tailwindcss/typography";
 
 :root {
-  --background: #fafafa;
+  /* Surface hierarchy — light mode: background < surface < raised < glass < focused */
+  --background: #f7f7f9;
   --surface: #ffffff;
   --surface-raised: #ffffff;
-  --border: #e5e5e5;
+  --surface-glass: color-mix(in srgb, #ffffff 72%, transparent);
+  --surface-focused: #ffffff;
+  --border: #e4e4e9;
+  --border-strong: #d3d3db;
   --foreground: #111114;
   --muted: #6b6b76;
   --accent: #6c5ce7;
   --accent-2: #22d3ee;
   --accent-foreground: #ffffff;
-  --danger: #ef4444;
-  --success: #22c55e;
+  --danger: #dc4545;
+  --success: #1f9c56;
+
+  --shadow-card: 0 1px 2px color-mix(in srgb, #111114 4%, transparent), 0 1px 1px color-mix(in srgb, #111114 3%, transparent);
+  --shadow-raised: 0 8px 24px -8px color-mix(in srgb, #111114 16%, transparent);
+  --shadow-dialog: 0 24px 64px -16px color-mix(in srgb, #111114 24%, transparent);
+
+  --radius-control: 0.625rem;
+  --radius-card: 1rem;
+  --radius-dialog: 1.25rem;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #08080b;
-    --surface: #101014;
-    --surface-raised: #17171d;
+    /* Depth is built from contrast + border + a touch of translucency,
+       never from glow — background is near-black, not pure black, so
+       elevated surfaces still read as distinct steps above it. */
+    --background: #08080a;
+    --surface: #111114;
+    --surface-raised: #17171b;
+    --surface-glass: color-mix(in srgb, #17171b 62%, transparent);
+    --surface-focused: #1c1c21;
     --border: #232329;
-    --foreground: #f4f4f6;
-    --muted: #9a9aa5;
+    --border-strong: #313138;
+    --foreground: #f2f2f4;
+    --muted: #96969f;
     --accent: #8b7bff;
     --accent-2: #35e0ff;
-    --accent-foreground: #08080b;
-    --danger: #f87171;
-    --success: #4ade80;
+    --accent-foreground: #08080a;
+    --danger: #f2716a;
+    --success: #4fd884;
+
+    --shadow-card: 0 1px 2px color-mix(in srgb, #000000 40%, transparent);
+    --shadow-raised: 0 12px 32px -12px color-mix(in srgb, #000000 60%, transparent);
+    --shadow-dialog: 0 32px 80px -16px color-mix(in srgb, #000000 70%, transparent);
   }
 }
 
@@ -35,7 +57,10 @@
   --color-background: var(--background);
   --color-surface: var(--surface);
   --color-surface-raised: var(--surface-raised);
+  --color-surface-glass: var(--surface-glass);
+  --color-surface-focused: var(--surface-focused);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
@@ -45,6 +70,9 @@
   --color-success: var(--success);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --radius-control: var(--radius-control);
+  --radius-card: var(--radius-card);
+  --radius-dialog: var(--radius-dialog);
 }
 
 body {
@@ -68,6 +96,24 @@ body {
   scrollbar-color: var(--border) transparent;
 }
 
+/* Restrained glassmorphism — used only on the navigation shell (sidebar,
+   topbar, command palette, drawers), never on ordinary content cards. */
+.orbit-glass {
+  background: var(--surface-glass);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+}
+
+/* Consistent focus ring across every interactive element — accessibility
+   requirement, not a decorative choice. */
+.orbit-focus {
+  outline: none;
+}
+.orbit-focus:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   @keyframes orbit-palette-in {
     from {
@@ -81,11 +127,11 @@ body {
   }
 
   .orbit-palette-enter {
-    animation: orbit-palette-in 140ms ease-out;
+    animation: orbit-palette-in 180ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .orbit-fade-in {
-    animation: orbit-palette-in 160ms ease-out;
+    animation: orbit-palette-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   @keyframes orbit-drawer-in {
@@ -100,6 +146,32 @@ body {
   }
 
   .orbit-drawer-enter {
-    animation: orbit-drawer-in 180ms ease-out;
+    animation: orbit-drawer-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes orbit-breathe {
+    0%,
+    100% {
+      opacity: 0.55;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.9;
+      transform: scale(1.04);
+    }
+  }
+
+  @keyframes orbit-spin-slow {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .orbit-core-ring {
+    animation: orbit-spin-slow 18s linear infinite;
+  }
+
+  .orbit-core-glow {
+    animation: orbit-breathe 3.6s ease-in-out infinite;
   }
 }

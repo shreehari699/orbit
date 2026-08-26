@@ -14,7 +14,7 @@ export function EmptyState({
 }) {
   const Icon = (Icons[icon as keyof typeof Icons] ?? Icons.Inbox) as Icons.LucideIcon;
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border px-6 py-16 text-center">
+    <div className="flex flex-col items-center justify-center gap-3 rounded-card border border-dashed border-border px-6 py-16 text-center">
       <Icon className="h-8 w-8 text-muted" strokeWidth={1.5} />
       <div>
         <p className="text-sm font-medium text-foreground">{title}</p>

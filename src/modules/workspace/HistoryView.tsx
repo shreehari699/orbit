@@ -10,6 +10,7 @@ import type { HistoryEntry } from "@/lib/workspace/types";
 import { ToolCard } from "@/components/tools/ToolCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
+import { StaggerContainer, StaggerItem } from "@/components/motion/primitives";
 
 export function HistoryView() {
   const [history, setHistory] = useState<HistoryEntry[] | null>(null);
@@ -38,21 +39,22 @@ export function HistoryView() {
       {history === null ? null : history.length === 0 ? (
         <EmptyState icon="History" title="No activity yet" description="Tools you open will show up here." />
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <StaggerContainer className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {history.map((entry) => {
             const tool = TOOLS.find((t) => t.id === entry.toolId);
             if (!tool) return null;
             return (
-              <ToolCard
-                key={`${tool.id}-${entry.at}`}
-                tool={tool}
-                favorited={favoriteIds.has(tool.id)}
-                onFavoriteChange={() => setFavoriteIds(new Set(getFavorites().map((f) => f.toolId)))}
-                meta={`Opened ${new Date(entry.at).toLocaleString()}`}
-              />
+              <StaggerItem key={`${tool.id}-${entry.at}`}>
+                <ToolCard
+                  tool={tool}
+                  favorited={favoriteIds.has(tool.id)}
+                  onFavoriteChange={() => setFavoriteIds(new Set(getFavorites().map((f) => f.toolId)))}
+                  meta={`Opened ${new Date(entry.at).toLocaleString()}`}
+                />
+              </StaggerItem>
             );
           })}
-        </div>
+        </StaggerContainer>
       )}
     </div>
   );

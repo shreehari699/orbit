@@ -8,6 +8,7 @@ import { TOOLS, TOOL_CATEGORIES, type ToolCategory } from "@/registry/tools";
 import { getFavorites } from "@/lib/workspace/favorites";
 import { ToolCard } from "@/components/tools/ToolCard";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { StaggerContainer, StaggerItem } from "@/components/motion/primitives";
 
 export function CategoryView({ categoryId }: { categoryId: ToolCategory }) {
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
@@ -31,16 +32,17 @@ export function CategoryView({ categoryId }: { categoryId: ToolCategory }) {
       {tools.length === 0 ? (
         <EmptyState icon="Boxes" title="No tools in this category yet" />
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <StaggerContainer className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {tools.map((tool) => (
-            <ToolCard
-              key={tool.id}
-              tool={tool}
-              favorited={favoriteIds.has(tool.id)}
-              onFavoriteChange={() => setFavoriteIds(new Set(getFavorites().map((f) => f.toolId)))}
-            />
+            <StaggerItem key={tool.id}>
+              <ToolCard
+                tool={tool}
+                favorited={favoriteIds.has(tool.id)}
+                onFavoriteChange={() => setFavoriteIds(new Set(getFavorites().map((f) => f.toolId)))}
+              />
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
       )}
     </div>
   );

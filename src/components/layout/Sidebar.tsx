@@ -28,13 +28,16 @@ function NavLink({
       title={collapsed ? item.label : undefined}
       aria-current={active ? "page" : undefined}
       className={[
-        "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+        "orbit-focus group relative flex items-center gap-3 rounded-control px-3 py-2 text-sm transition-colors",
         collapsed ? "justify-center" : "",
         active
-          ? "bg-foreground text-background"
+          ? "bg-accent/12 text-accent"
           : "text-muted hover:bg-black/[0.04] hover:text-foreground dark:hover:bg-white/[0.06]",
       ].join(" ")}
     >
+      {active && (
+        <span className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-accent" aria-hidden="true" />
+      )}
       <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={1.75} />
       {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
       {collapsed && <span className="sr-only">{item.label}</span>}
@@ -54,7 +57,7 @@ export function SidebarContent({
   return (
     <>
       <div className={`flex h-16 items-center px-5 ${collapsed ? "justify-center px-0" : "gap-2.5"}`}>
-        <Link href="/command" onClick={onNavigate} aria-label="ORBIT home">
+        <Link href="/command" onClick={onNavigate} aria-label="ORBIT home" className="orbit-focus rounded-control">
           {collapsed ? <OrbitMark className="h-7 w-7" /> : <OrbitWordmark markClassName="h-7 w-7" />}
         </Link>
       </div>
@@ -93,7 +96,7 @@ export function Sidebar() {
 
   return (
     <aside
-      className={`hidden h-full shrink-0 flex-col border-r border-border bg-surface transition-[width] duration-200 motion-reduce:transition-none lg:flex ${
+      className={`orbit-glass hidden h-full shrink-0 flex-col border-r border-border transition-[width] duration-200 motion-reduce:transition-none lg:flex ${
         collapsed ? "w-[68px]" : "w-64"
       }`}
     >
@@ -103,7 +106,7 @@ export function Sidebar() {
           onClick={toggle}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           aria-pressed={collapsed}
-          className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted transition hover:bg-black/[0.04] hover:text-foreground dark:hover:bg-white/[0.06] ${
+          className={`orbit-focus flex w-full items-center gap-2 rounded-control px-3 py-2 text-sm text-muted transition-colors hover:bg-black/[0.04] hover:text-foreground dark:hover:bg-white/[0.06] ${
             collapsed ? "justify-center" : ""
           }`}
         >

@@ -9,6 +9,7 @@ import { getFavorites } from "@/lib/workspace/favorites";
 import { ToolCard } from "@/components/tools/ToolCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { WebResults } from "@/components/search/WebResults";
+import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion/primitives";
 
 /**
  * The dedicated Search surface — the same engine as the Cmd+K palette, but
@@ -33,7 +34,7 @@ export function SearchView() {
         <p className="mt-1 text-sm text-muted">Search every tool in the registry.</p>
       </div>
 
-      <div className="flex items-center gap-2 rounded-2xl border border-border bg-surface px-4 py-3 shadow-sm">
+      <div className="flex items-center gap-2 rounded-card border border-border bg-surface-raised px-4 py-3 shadow-[var(--shadow-card)] transition-colors focus-within:border-accent/40">
         <Icons.Search className="h-4 w-4 shrink-0 text-muted" strokeWidth={1.75} />
         <input
           autoFocus
@@ -45,28 +46,29 @@ export function SearchView() {
       </div>
 
       {quickAnswer && (
-        <div className="rounded-2xl bg-accent/5 px-4 py-3">
+        <FadeIn className="rounded-card bg-accent/5 px-4 py-3">
           <div className="text-[11px] uppercase tracking-wide text-muted">Quick answer</div>
           <div className="mt-0.5 flex items-baseline gap-2">
             <span className="text-xl font-semibold">{quickAnswer.result}</span>
             {quickAnswer.detail && <span className="text-xs text-muted">{quickAnswer.detail}</span>}
           </div>
-        </div>
+        </FadeIn>
       )}
 
       {results.length === 0 ? (
         <EmptyState icon="SearchX" title="No tools match your search" />
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <StaggerContainer className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {results.map(({ tool }) => (
-            <ToolCard
-              key={tool.id}
-              tool={tool}
-              favorited={favoriteIds.has(tool.id)}
-              onFavoriteChange={() => setFavoriteIds(new Set(getFavorites().map((f) => f.toolId)))}
-            />
+            <StaggerItem key={tool.id}>
+              <ToolCard
+                tool={tool}
+                favorited={favoriteIds.has(tool.id)}
+                onFavoriteChange={() => setFavoriteIds(new Set(getFavorites().map((f) => f.toolId)))}
+              />
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
       )}
 
       {query.trim() && <WebResults query={query} />}
