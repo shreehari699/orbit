@@ -2,6 +2,8 @@
 
 import { motion } from "framer-motion";
 
+import { VoiceWaveform } from "./VoiceWaveform";
+
 /**
  * ORBIT's signature ambient visual — a small orbital ring system around a
  * breathing core, used both as a subtle brand touch (idle, low-opacity,
@@ -34,22 +36,13 @@ const GLOW_OPACITY: Record<OrbitCoreState, number> = {
   complete: 0.35,
 };
 
-// One gentle height sequence per bar, offset so the group reads as an
-// organic ambient pulse rather than a synchronized blink.
-const WAVE_SEQUENCES: number[][] = [
-  [3, 8, 4, 3],
-  [3, 11, 5, 3],
-  [3, 6, 13, 3],
-  [3, 10, 4, 3],
-  [3, 7, 3, 3],
-];
-
 export function OrbitCore({
   state = "idle",
-  size = 120,
+  size,
   className = "",
 }: {
   state?: OrbitCoreState;
+  /** Fixed pixel size. Omit to let the component fill its parent (use a sized wrapper for responsive sizing). */
   size?: number;
   className?: string;
 }) {
@@ -57,8 +50,8 @@ export function OrbitCore({
 
   return (
     <div
-      className={`relative grid place-items-center ${className}`}
-      style={{ width: size, height: size }}
+      className={`relative grid place-items-center ${size ? "" : "h-full w-full"} ${className}`}
+      style={size ? { width: size, height: size } : undefined}
       aria-hidden="true"
     >
       <motion.div
@@ -93,22 +86,7 @@ export function OrbitCore({
           repeatType: "mirror",
         }}
       >
-        <div className="flex items-end gap-[3px]">
-          {WAVE_SEQUENCES.map((sequence, i) => (
-            <motion.span
-              key={i}
-              className="w-[2px] rounded-full bg-accent-foreground/80"
-              animate={{ height: speaking ? sequence : sequence[0] }}
-              transition={{
-                duration: 0.7,
-                repeat: speaking ? Infinity : 0,
-                repeatType: "mirror",
-                delay: i * 0.09,
-                ease: EASE,
-              }}
-            />
-          ))}
-        </div>
+        <VoiceWaveform active={speaking} />
       </motion.div>
     </div>
   );

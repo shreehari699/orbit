@@ -67,7 +67,7 @@ export function SidebarContent({
           const items = NAV_ITEMS.filter((i) => i.group === group.key);
           return (
             <div key={group.key}>
-              {!collapsed && (
+              {!collapsed && group.label && (
                 <div className="mb-1.5 px-3 text-[11px] font-medium uppercase tracking-wider text-muted">
                   {group.label}
                 </div>

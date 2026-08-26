@@ -2,7 +2,7 @@ export interface NavItem {
   label: string;
   href: string;
   icon: string; // lucide-react icon name
-  group: "main" | "connect";
+  group: "main" | "connect" | "system";
 }
 
 export const NAV_ITEMS: NavItem[] = [
@@ -16,9 +16,12 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Zero Degree Apps", href: "/apps", icon: "Grid3x3", group: "connect" },
   { label: "LOOP", href: "/integrations/loop", icon: "Repeat", group: "connect" },
   { label: "CIVI", href: "/integrations/civi", icon: "Landmark", group: "connect" },
+
+  { label: "Settings", href: "/settings", icon: "Settings", group: "system" },
 ];
 
 export const NAV_GROUPS: { key: NavItem["group"]; label: string }[] = [
   { key: "main", label: "ORBIT" },
   { key: "connect", label: "Connect" },
+  { key: "system", label: "" },
 ];
