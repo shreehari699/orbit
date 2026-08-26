@@ -1,13 +1,33 @@
 # ORBIT database (Supabase / PostgreSQL)
 
-**Status: schema validated locally, not applied to any live project.**
-This session had no Supabase project or credentials available — no
-`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
-`SUPABASE_SERVICE_ROLE_KEY`, or database password existed anywhere in the
-environment, and there is no real Supabase project behind this schema
-yet. No ORBIT feature currently depends on it — the app runs today
-entirely without a database (workspace state lives in `localStorage`;
-see `src/lib/workspace/`).
+**Status: a live Supabase project exists; schema validated locally; not
+yet applied to that live project.** A dedicated ORBIT project
+(`https://jnmhtppabrodkzfpqess.supabase.co`) and its API keys were
+provided in a later session. Applying migrations to it from *this*
+development sandbox is blocked at the network layer, not by a missing
+credential: this sandbox's outbound egress is a strict allowlist (npm/
+PyPI/crates/Go-proxy registries plus Anthropic's own API), and that
+Supabase project's host isn't on it — confirmed via the proxy's own
+status endpoint and a direct `curl`, both returning a policy-level 403
+on `CONNECT`, the same way it blocks e.g. `jsdelivr.net`. Per that
+proxy's own operating instructions, a blocked host is reported, not
+routed around — no bypass was attempted. A real production deployment
+(e.g. Vercel) or any machine with normal internet access does not have
+this restriction and can run these migrations and connect normally. No
+ORBIT feature currently depends on this database yet either way — the
+app runs today entirely without one (workspace state lives in
+`localStorage`; see `src/lib/workspace/`).
+
+**Security note:** the API keys for this project were pasted directly
+into a chat conversation. Treat the `service_role` key in particular as
+sensitive from that point on — rotating it in the Supabase dashboard
+after setup is complete is good practice regardless of anything in this
+repository, since a chat transcript is a wider exposure surface than a
+secrets manager. Nothing in this repository ever received that key: it
+was written only to a local, gitignored `.env.local` for a connectivity
+test (itself blocked, see above) and is not present anywhere in the git
+history — verified by scanning every commit on every branch, not
+assumed.
 
 What "validated locally" means concretely: every migration and `seed.sql`
 were run, in order, against a real local PostgreSQL 16 instance (with a
@@ -37,13 +57,17 @@ internal resource index described below.
 
 ## To apply
 
-1. Create a Supabase project (own project — **not** Z Hub's; ORBIT must
-   not share a database with Z Hub).
-2. Set `DATABASE_URL` / the Supabase CLI's project ref, then either:
-   - `supabase db push` (Supabase CLI, run from this directory's parent), or
-   - paste each file in `migrations/`, in filename order, into the SQL
-     editor in the Supabase dashboard.
-3. Optionally run `seed.sql` to populate `categories`, `tools`, and
+The project already exists — `https://jnmhtppabrodkzfpqess.supabase.co`,
+dedicated to ORBIT, separate from Z Hub's. From any machine with normal
+internet access (i.e. not this development sandbox):
+
+1. Either paste each file in `migrations/`, in filename order, into the
+   SQL editor at supabase.com/dashboard for this project (simplest — no
+   local setup needed), or install the Supabase CLI and run
+   `supabase link --project-ref jnmhtppabrodkzfpqess` (prompts for the
+   database password, set at project creation) followed by
+   `supabase db push` from this directory's parent.
+2. Optionally run `seed.sql` to populate `categories`, `tools`, and
    `zero_degree_apps` with ORBIT's actual current registry (not filler —
    every row mirrors `src/registry/tools.ts` and `src/registry/apps.ts`
    at the time this was written).
